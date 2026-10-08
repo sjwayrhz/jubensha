@@ -23,6 +23,14 @@ function RoleGuard({ roles, children }) {
   return children;
 }
 
+function PlayerHome() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="wrap"><p className="muted">加载中…</p></div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'dm') return <Navigate to="/dm" replace />;
+  return <Home />;
+}
+
 function Topbar() {
   const { user, logout } = useAuth();
   const loc = useLocation();
@@ -57,7 +65,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Guard><Home /></Guard>} />
+          <Route path="/" element={<PlayerHome />} />
           <Route path="/rooms/:id" element={<Guard><Room /></Guard>} />
           <Route path="/dm" element={<RoleGuard roles={['dm', 'admin']}><DmHome /></RoleGuard>} />
           <Route path="/dm/rooms/:id" element={<RoleGuard roles={['dm', 'admin']}><DmRoom /></RoleGuard>} />

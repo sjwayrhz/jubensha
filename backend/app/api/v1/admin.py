@@ -14,6 +14,8 @@ from ...models.script import Script, ScriptCharacter, ScriptClue
 from ...models.user import User
 from ...schemas.room import RoleUpdateIn
 from ...schemas.script import (
+    DmManualIn,
+    DmManualOut,
     ScriptOut,
     ScriptParseOut,
     ScriptRawIn,
@@ -140,6 +142,37 @@ def save_script_raw(
     return ScriptRawOut(
         script_id=script.id, title=script.title, status=script.status,
         raw_text=script.raw_text or "",
+    )
+
+
+@router.get("/scripts/{script_id}/dm-manual", response_model=DmManualOut)
+def get_dm_manual(
+    script_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    """取 DM 手册（管理员编辑用）。"""
+    script = _get_script_or_404(db, script_id)
+    return DmManualOut(
+        script_id=script.id, title=script.title, status=script.status,
+        dm_manual=script.dm_manual or "",
+    )
+
+
+@router.put("/scripts/{script_id}/dm-manual", response_model=DmManualOut)
+def save_dm_manual(
+    script_id: int,
+    data: DmManualIn,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    """保存 DM 手册（仅管理员可写；玩家端永不返回该字段）。"""
+    script = _get_script_or_404(db, script_id)
+    script.dm_manual = data.dm_manual
+    db.commit()
+    return DmManualOut(
+        script_id=script.id, title=script.title, status=script.status,
+        dm_manual=script.dm_manual or "",
     )
 
 

@@ -44,6 +44,17 @@ class ScriptRawIn(BaseModel):
     raw_text: str
 
 
+class DmManualOut(BaseModel):
+    script_id: int
+    title: str
+    status: str
+    dm_manual: str
+
+
+class DmManualIn(BaseModel):
+    dm_manual: str
+
+
 class ScriptStructureOut(BaseModel):
     script_id: int
     status: str

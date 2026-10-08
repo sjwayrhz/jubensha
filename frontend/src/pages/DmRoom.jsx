@@ -11,6 +11,8 @@ export default function DmRoom() {
   const [room, setRoom] = useState(null);
   const [chars, setChars] = useState([]);
   const [clues, setClues] = useState([]);
+  const [manual, setManual] = useState('');
+  const [showManual, setShowManual] = useState(false);
   const [err, setErr] = useState('');
   const [ok, setOk] = useState('');
   const [assignPid, setAssignPid] = useState('');
@@ -23,12 +25,14 @@ export default function DmRoom() {
     try {
       const r = await api(`/rooms/${id}`);
       setRoom(r);
-      const [cs, cl] = await Promise.all([
+      const [cs, cl, mn] = await Promise.all([
         api(`/dm/rooms/${id}/characters`).catch(() => []),
         api(`/dm/rooms/${id}/clues`).catch(() => []),
+        api(`/dm/rooms/${id}/manual`).catch(() => null),
       ]);
       setChars(cs);
       setClues(cl);
+      setManual(mn && mn.dm_manual ? mn.dm_manual : '');
       if (r.players.length && !assignPid) setAssignPid(String(r.players[0].user_id));
       if (cs.length && !assignCid) setAssignCid(String(cs[0].id));
       if (cl.length && !clueId) setClueId(String(cl[0].id));
@@ -100,6 +104,19 @@ export default function DmRoom() {
             </li>
           ))}
         </ul>
+      </div>
+
+      <div className="card">
+        <div className="row space">
+          <h3 style={{ margin: 0 }}>DM 手册</h3>
+          <button className="btn small ghost" onClick={() => setShowManual((v) => !v)}>
+            {showManual ? '收起' : '展开'}
+          </button>
+        </div>
+        {showManual && (
+          manual ? <p className="rev-p" style={{ maxWidth: 'none', whiteSpace: 'pre-wrap' }}>{manual}</p>
+                 : <p className="muted">暂无 DM 手册，管理员可在剧本管理中添加。</p>
+        )}
       </div>
       </div>
       <div>

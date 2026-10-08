@@ -252,6 +252,17 @@ def reveal_clue(
     return {"room_clue_id": rc.id, "scope": rc.visible_scope}
 
 
+@router.get("/rooms/{room_id}/manual")
+def get_room_manual(room_id: int, db: Session = Depends(get_db), dm: User = Depends(require_dm)):
+    """本房剧本的 DM 手册（仅 DM 可见，玩家端无此接口）。"""
+    room = _get_room_or_404(db, room_id)
+    _require_room_dm(room, dm)
+    script = db.get(Script, room.script_id)
+    return {"room_id": room.id, "script_id": room.script_id,
+            "title": script.title if script else "",
+            "dm_manual": (script.dm_manual if script else "") or ""}
+
+
 @router.delete("/rooms/{room_id}")
 def delete_room(room_id: int, db: Session = Depends(get_db), dm: User = Depends(require_dm)):
     """删除房间：只能删自己的房间（admin 可删任意）。

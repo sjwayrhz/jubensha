@@ -24,6 +24,7 @@ class Script(Base):
     source_note: Mapped[str] = mapped_column(String(1024), default="")
     pdf_path: Mapped[str] = mapped_column(String(1024), default="")
     raw_text: Mapped[str] = mapped_column(Text, default="")
+    dm_manual: Mapped[str] = mapped_column(Text, default="")  # DM手册：仅DM可见，玩家不可见
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

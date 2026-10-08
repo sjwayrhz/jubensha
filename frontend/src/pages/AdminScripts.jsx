@@ -13,6 +13,8 @@ export default function AdminScripts() {
   const [sel, setSel] = useState(null); // 当前编辑的剧本
   const [raw, setRaw] = useState('');
   const [parseInfo, setParseInfo] = useState(null);
+  const [manual, setManual] = useState('');
+  const [manualSel, setManualSel] = useState(null); // 正在编辑DM手册的剧本
   const fileRef = useRef(null);
 
   const load = () => api('/admin/scripts').then(setScripts).catch((e) => setErr(e.message));
@@ -93,6 +95,29 @@ export default function AdminScripts() {
     }
   };
 
+  const openManual = async (s) => {
+    setErr('');
+    try {
+      const r = await api(`/admin/scripts/${s.id}/dm-manual`);
+      setManualSel(s);
+      setManual(r.dm_manual || '');
+    } catch (ex) {
+      setErr(ex.message);
+    }
+  };
+
+  const saveManual = async () => {
+    setErr(''); setOk(''); setBusy(true);
+    try {
+      await api(`/admin/scripts/${manualSel.id}/dm-manual`, { method: 'PUT', body: { dm_manual: manual } });
+      setOk('DM 手册已保存（仅 DM 可见）');
+    } catch (ex) {
+      setErr(ex.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <>
       <h2 className="page-title">剧本<span>管理</span></h2>
@@ -120,6 +145,7 @@ export default function AdminScripts() {
               <span className="row">
                 <button className="btn small ghost" onClick={() => parse(s)} disabled={busy}>解析</button>
                 <button className="btn small ghost" onClick={() => openRaw(s)}>校对</button>
+                <button className="btn small ghost" onClick={() => openManual(s)}>DM手册</button>
               </span>
             </li>
           ))}
@@ -144,6 +170,19 @@ export default function AdminScripts() {
             <button className="btn ghost" onClick={structure} disabled={busy}>结构化并发布</button>
           </div>
           <p className="muted">发布后玩家端可见；真凶标记请在文本中注明「真凶：X」。</p>
+        </div>
+      )}
+
+      {manualSel && (
+        <div className="card">
+          <h3>DM手册：{manualSel.title}</h3>
+          <textarea value={manual} onChange={(e) => setManual(e.target.value)} rows={14}
+            placeholder="写给 DM 看的：流程、时间轴、凶手手法、复盘要点…（玩家不可见）" />
+          <div className="row mt">
+            <button className="btn" onClick={saveManual} disabled={busy}>保存DM手册</button>
+            <button className="btn ghost" onClick={() => setManualSel(null)}>关闭</button>
+          </div>
+          <p className="muted">仅 DM 可见，玩家端永远不会出现。</p>
         </div>
       )}
       </div>
