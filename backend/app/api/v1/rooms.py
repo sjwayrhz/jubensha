@@ -13,6 +13,7 @@ from ...models.user import User
 from ...ws.manager import manager
 from ...schemas.room import (
     ClueOut,
+    FinishOut,
     MyScriptOut,
     RoomDetailOut,
     RoomMemberOut,
