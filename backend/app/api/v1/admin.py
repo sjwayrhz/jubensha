@@ -1,6 +1,7 @@
 """管理员后台：剧本上传 → 解析 → 校对 → 结构化 → 发布。"""
 import logging
 import os
+import re
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
@@ -161,6 +162,16 @@ def structure_script_api(
             script_id=script.id, name=c["name"][:64],
             description=c["description"], sort_order=c["sort_order"],
         ))
+    db.flush()  # 拿到 character 行后再标真凶
+    # 真凶标记：按手册约定从校对文本中找"真凶：X"，匹配角色名后标 is_murderer
+    mm = re.search(r"真凶[：:]\s*([^\s，,。；;]+)", script.raw_text or "")
+    if mm:
+        mname = mm.group(1).strip()
+        for ch in db.query(ScriptCharacter).filter_by(script_id=script.id).all():
+            if ch.name == mname or mname in ch.name:
+                ch.is_murderer = True
+                log.info("剧本结构化：真凶标记 -> %s", ch.name)
+                break
     for cl in result["clues"]:
         db.add(ScriptClue(
             script_id=script.id, title=cl["title"][:255],
