@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth.jsx';
+import loginBg from '../assets/login-bg.webp';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -26,21 +27,19 @@ export default function Register() {
   };
 
   return (
-    <div className="card" style={{ marginTop: 40 }}>
-      <h3>注册</h3>
-      {err && <div className="err">{err}</div>}
-      <form onSubmit={submit}>
-        <label className="f">邮箱</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <label className="f">昵称</label>
-        <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} required />
-        <label className="f">密码</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-        <div className="mt">
-          <button className="btn block" disabled={busy}>{busy ? '注册中…' : '注册'}</button>
-        </div>
-      </form>
-      <p className="muted center">已有账号？<Link to="/login">去登录</Link></p>
+    <div className="login-page" style={{ backgroundImage: `url(${loginBg})` }}>
+      <div className="login-in">
+        <h1 className="login-title">剧本<em>杀</em></h1>
+        <p className="login-sub">写下你的名字 · 入 戏</p>
+        {err && <div className="err">{err}</div>}
+        <form onSubmit={submit}>
+          <input type="email" placeholder="邮箱" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input type="text" placeholder="昵称" value={nickname} onChange={(e) => setNickname(e.target.value)} required />
+          <input type="password" placeholder="密码（至少 6 位）" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+          <button className="btn block" disabled={busy}>{busy ? '注册中…' : '注 册'}</button>
+        </form>
+        <p className="login-alt">已有账号？<Link to="/login">去登录</Link></p>
+      </div>
     </div>
   );
 }

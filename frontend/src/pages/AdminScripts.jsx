@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
+import emptyState from '../assets/empty-state.webp';
 
 const statusName = { uploaded: '已上传', parsed: '已解析', reviewed: '已校对', published: '已发布' };
+const statusBadge = { uploaded: '', parsed: 'stage', reviewed: 'stage', published: 'ok' };
 
 export default function AdminScripts() {
   const [scripts, setScripts] = useState([]);
@@ -93,12 +95,18 @@ export default function AdminScripts() {
 
   return (
     <>
+      <h2 className="page-title">剧本<span>管理</span></h2>
+      <p className="page-sub">上传 · 解析 · 校对 · 发布</p>
+
       <div className="card">
         <h3>上传剧本 PDF</h3>
         {err && <div className="err">{err}</div>}
         {ok && <div className="okmsg">{ok}</div>}
         <input ref={fileRef} type="file" accept=".pdf" onChange={upload} disabled={busy} />
-        <p className="muted">流程：上传 → 解析（文字提取/OCR）→ 校对 → 结构化发布</p>
+        <div className="pipe-steps">
+          <b>上传</b><span className="arrow">→</span><span>解析</span><span className="arrow">→</span><span>校对</span><span className="arrow">→</span><span>结构化发布</span>
+        </div>
+        <p className="muted">文字版直接提取，扫描版走 OCR；发布前务必人工校对。</p>
       </div>
 
       <div className="card">
@@ -106,7 +114,7 @@ export default function AdminScripts() {
         <ul className="list">
           {scripts.map((s) => (
             <li key={s.id} className="row space">
-              <span><b>{s.title}</b> <span className="badge">{statusName[s.status] || s.status}</span></span>
+              <span><b>{s.title}</b> <span className={`badge ${statusBadge[s.status] || ''}`}>{statusName[s.status] || s.status}</span></span>
               <span className="row">
                 <button className="btn small ghost" onClick={() => parse(s)} disabled={busy}>解析</button>
                 <button className="btn small ghost" onClick={() => openRaw(s)}>校对</button>
@@ -114,7 +122,12 @@ export default function AdminScripts() {
             </li>
           ))}
         </ul>
-        {scripts.length === 0 && <p className="muted">还没有剧本</p>}
+        {scripts.length === 0 && (
+          <div className="empty">
+            <img src={emptyState} alt="" />
+            <p>还没有剧本，传第一本吧。</p>
+          </div>
+        )}
       </div>
 
       {sel && (
@@ -126,7 +139,7 @@ export default function AdminScripts() {
             <button className="btn" onClick={saveRaw} disabled={busy}>保存校对</button>
             <button className="btn ghost" onClick={structure} disabled={busy}>结构化并发布</button>
           </div>
-          <p className="muted">发布后玩家端可见；真凶标记请在文本中注明，结构化后可在数据库确认。</p>
+          <p className="muted">发布后玩家端可见；真凶标记请在文本中注明「真凶：X」。</p>
         </div>
       )}
     </>

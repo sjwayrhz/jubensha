@@ -51,20 +51,22 @@ export default function DmRoom() {
     }
   };
 
-  if (!room) return <p className="muted">加载中…</p>;
+  if (!room) return <p className="muted">正在入场…</p>;
   const next = STAGE_NEXT[room.stage];
 
   return (
     <>
+      <h2 className="page-title">控场<span>台</span></h2>
+      <p className="page-sub">{room.script ? room.script.title : ''} · <span className="badge code">{room.code}</span></p>
       {err && <div className="err">{err}</div>}
       {ok && <div className="okmsg">{ok}</div>}
 
       <div className="card">
         <div className="row space">
-          <h3 style={{ margin: 0 }}>{room.script ? room.script.title : ''} <span className="badge">{room.code}</span></h3>
+          <h3 style={{ margin: 0 }}>当前阶段</h3>
           <span className="badge stage">{stageName[room.stage]}</span>
         </div>
-        <div className="row mt">
+        <div className="ctl-row">
           {room.stage === 'waiting' && (
             <button className="btn" onClick={() => act(() => api(`/dm/rooms/${id}/start`, { method: 'POST' }), '已开局，进入选角')}>开始游戏</button>
           )}
@@ -77,7 +79,7 @@ export default function DmRoom() {
             <button className="btn" onClick={() => act(() => api(`/dm/rooms/${id}/vote/open`, { method: 'POST' }), '投票已开启')}>开启投票</button>
           )}
           {room.stage === 'voting' && (
-            <button className="btn" onClick={() => act(() => api(`/dm/rooms/${id}/vote/close`, { method: 'POST' }), '投票已关闭，进入复盘')}>关闭投票</button>
+            <button className="btn danger" onClick={() => act(() => api(`/dm/rooms/${id}/vote/close`, { method: 'POST' }), '投票已关闭，进入复盘')}>关闭投票</button>
           )}
           {room.stage === 'reveal' && (
             <button className="btn" onClick={() => act(() => api(`/dm/rooms/${id}/finish`, { method: 'POST' }), '真相已公布，本局结束')}>公布真相</button>
@@ -86,7 +88,7 @@ export default function DmRoom() {
       </div>
 
       <div className="card">
-        <h3>成员（{room.players.length}）</h3>
+        <h3>在场 · {room.players.length} 人</h3>
         <ul className="list">
           {room.players.map((p) => (
             <li key={p.user_id}>{p.nickname || `玩家${p.user_id}`}

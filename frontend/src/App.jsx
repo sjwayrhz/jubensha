@@ -30,7 +30,7 @@ function Topbar() {
   return (
     <div className="topbar">
       <div className="in">
-        <Link className="brand" to="/">剧本杀</Link>
+        <Link className="brand" to="/">剧本<em>杀</em></Link>
         <div className="nav">
           {(user.role === 'dm' || user.role === 'admin') && (
             <NavLink to="/dm" className={({ isActive }) => isActive ? 'on' : ''}>DM</NavLink>

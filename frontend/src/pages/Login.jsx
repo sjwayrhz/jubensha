@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth.jsx';
+import loginBg from '../assets/login-bg.webp';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -25,19 +26,18 @@ export default function Login() {
   };
 
   return (
-    <div className="card" style={{ marginTop: 40 }}>
-      <h3>登录</h3>
-      {err && <div className="err">{err}</div>}
-      <form onSubmit={submit}>
-        <label className="f">邮箱</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <label className="f">密码</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <div className="mt">
-          <button className="btn block" disabled={busy}>{busy ? '登录中…' : '登录'}</button>
-        </div>
-      </form>
-      <p className="muted center">没有账号？<Link to="/register">去注册</Link></p>
+    <div className="login-page" style={{ backgroundImage: `url(${loginBg})` }}>
+      <div className="login-in">
+        <h1 className="login-title">剧本<em>杀</em></h1>
+        <p className="login-sub">走进故事 · 成为故事</p>
+        {err && <div className="err">{err}</div>}
+        <form onSubmit={submit}>
+          <input type="email" placeholder="邮箱" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input type="password" placeholder="密码" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <button className="btn block" disabled={busy}>{busy ? '推门中…' : '进 入'}</button>
+        </form>
+        <p className="login-alt">还没有账号？<Link to="/register">去注册</Link></p>
+      </div>
     </div>
   );
 }
