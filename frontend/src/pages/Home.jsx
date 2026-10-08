@@ -55,18 +55,20 @@ export default function Home() {
           <p>书架还是空的，等管理员上架剧本。</p>
         </div>
       ) : (
-        scripts.map((s) => (
-          <div className="scard" key={s.id}>
-            <img className="cover" src={coverDefault} alt="" />
-            <div>
-              <div className="ti">{s.title}</div>
-              {s.description && <div className="ds">{s.description.slice(0, 60)}</div>}
-              <div className="tags">
-                <span className="badge">{s.player_min}–{s.player_max} 人</span>
+        <div className="script-grid">
+          {scripts.map((s) => (
+            <div className="scard" key={s.id}>
+              <img className="cover" src={coverDefault} alt="" />
+              <div>
+                <div className="ti">{s.title}</div>
+                {s.description && <div className="ds">{s.description.slice(0, 60)}</div>}
+                <div className="tags">
+                  <span className="badge">{s.player_min}–{s.player_max} 人</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
       <p className="muted center">开房请找 DM</p>
     </>

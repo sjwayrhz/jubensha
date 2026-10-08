@@ -39,6 +39,8 @@ export default function DmHome() {
       <h2 className="page-title">DM <span>控场</span></h2>
       <p className="page-sub">你是今晚的导演</p>
 
+      <div className="dm-layout">
+      <div>
       <div className="card">
         <h3>新建房间</h3>
         {err && <div className="err">{err}</div>}
@@ -54,6 +56,8 @@ export default function DmHome() {
           </form>
         )}
       </div>
+      </div>
+      <div>
       <div className="card">
         <h3>我的房间</h3>
         {rooms.length === 0 ? (
@@ -75,6 +79,8 @@ export default function DmHome() {
             ))}
           </ul>
         )}
+      </div>
+      </div>
       </div>
     </>
   );

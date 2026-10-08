@@ -61,6 +61,8 @@ export default function DmRoom() {
       {err && <div className="err">{err}</div>}
       {ok && <div className="okmsg">{ok}</div>}
 
+      <div className="dm-layout">
+      <div>
       <div className="card">
         <div className="row space">
           <h3 style={{ margin: 0 }}>当前阶段</h3>
@@ -97,6 +99,8 @@ export default function DmRoom() {
           ))}
         </ul>
       </div>
+      </div>
+      <div>
 
       <div className="card">
         <h3>分配角色</h3>
@@ -139,6 +143,8 @@ export default function DmRoom() {
             '线索已投放'
           )}>投放</button>
         </div>
+      </div>
+      </div>
       </div>
     </>
   );

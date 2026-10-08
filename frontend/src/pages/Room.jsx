@@ -198,7 +198,8 @@ export default function Room() {
   const votedPct = room.players.length ? Math.min(100, Math.round((votedTotal / room.players.length) * 100)) : 0;
 
   return (
-    <>
+    <div className="room-layout">
+      <aside className="room-side">
       {err && <div className="err">{err}</div>}
       <div className="card">
         <div className="row space">
@@ -229,6 +230,8 @@ export default function Room() {
         </div>
       )}
 
+      </aside>
+      <div className="room-main">
       {room.stage === 'reading' && (
         myScript ? (
           <ReadPaper characterName={myScript.character_name} text={myScript.description} />
@@ -348,6 +351,7 @@ export default function Room() {
           <div className="card"><p className="muted">DM 正在揭晓真相…</p></div>
         )
       )}
-    </>
+      </div>
+    </div>
   );
 }

@@ -98,6 +98,8 @@ export default function AdminScripts() {
       <h2 className="page-title">剧本<span>管理</span></h2>
       <p className="page-sub">上传 · 解析 · 校对 · 发布</p>
 
+      <div className="admin-layout">
+      <div>
       <div className="card">
         <h3>上传剧本 PDF</h3>
         {err && <div className="err">{err}</div>}
@@ -129,6 +131,8 @@ export default function AdminScripts() {
           </div>
         )}
       </div>
+      </div>
+      <div className="admin-right">
 
       {sel && (
         <div className="card">
@@ -142,6 +146,8 @@ export default function AdminScripts() {
           <p className="muted">发布后玩家端可见；真凶标记请在文本中注明「真凶：X」。</p>
         </div>
       )}
+      </div>
+      </div>
     </>
   );
 }
