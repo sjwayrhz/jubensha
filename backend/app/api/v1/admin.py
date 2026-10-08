@@ -11,6 +11,7 @@ from ...core.deps import require_admin
 from ...db.session import get_db
 from ...models.script import Script, ScriptCharacter, ScriptClue
 from ...models.user import User
+from ...schemas.room import RoleUpdateIn
 from ...schemas.script import (
     ScriptOut,
     ScriptParseOut,
@@ -19,6 +20,7 @@ from ...schemas.script import (
     ScriptStructureOut,
     ScriptUploadOut,
 )
+from ...schemas.user import UserOut
 from ...services.script_parse import parse_pdf
 from ...services.script_structure import structure_script
 
@@ -174,3 +176,25 @@ def structure_script_api(
         script_id=script.id, status=script.status,
         characters=len(result["characters"]), clues=len(result["clues"]),
     )
+
+
+@router.put("/users/{user_id}/role", response_model=UserOut)
+def update_user_role(
+    user_id: int,
+    data: RoleUpdateIn,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    """管理员修改用户角色（熟人邀请制开 DM 用）。"""
+    if data.role not in ("admin", "dm", "player"):
+        raise HTTPException(400, "role 只能是 admin/dm/player")
+    target = db.get(User, user_id)
+    if not target:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "用户不存在")
+    if target.id == admin.id and data.role != "admin":
+        raise HTTPException(400, "不能降级自己的管理员身份")
+    target.role = data.role
+    db.commit()
+    db.refresh(target)
+    log.info("改角色：user=%d → %s（操作人 admin=%d）", target.id, data.role, admin.id)
+    return target
