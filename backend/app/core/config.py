@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24 * 7
 
+    # 剧本 PDF 上传
+    upload_dir: str = "uploads"
+    max_upload_mb: int = 50
+    # 文字提取少于该字数则判定为扫描版，走 OCR
+    ocr_text_threshold: int = 200
+
     @property
     def database_url(self) -> str:
         return (

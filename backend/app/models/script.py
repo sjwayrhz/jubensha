@@ -7,7 +7,8 @@ from ..db.session import Base
 
 
 class Script(Base):
-    """剧本。status: draft（解析/校对中）| published（上架可开）。"""
+    """剧本。status: uploaded（已上传待解析）| parsed（已解析待校对）
+    | reviewed（已校对待结构化）| published（上架可开）| draft（草稿）。"""
 
     __tablename__ = "scripts"
 
@@ -21,6 +22,8 @@ class Script(Base):
     status: Mapped[str] = mapped_column(String(16), default="draft", index=True)
     source_url: Mapped[str] = mapped_column(String(1024), default="")
     source_note: Mapped[str] = mapped_column(String(1024), default="")
+    pdf_path: Mapped[str] = mapped_column(String(1024), default="")
+    raw_text: Mapped[str] = mapped_column(Text, default="")
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
