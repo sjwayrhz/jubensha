@@ -46,7 +46,8 @@ class ClueRevealIn(BaseModel):
 
 
 class VoteIn(BaseModel):
-    target_player_id: int  # 被投玩家的 user_id
+    target_player_id: int | None = None  # 被投玩家的 user_id
+    target_character_id: int | None = None  # 指认的人物 id（单人本指认真凶），与 target_player_id 二选一
 
 
 class RoleUpdateIn(BaseModel):
@@ -99,6 +100,7 @@ class FinishOut(BaseModel):
     murderer_name: str | None = None
     murderer_description: str | None = None
     recap: str = ""
+    my_accused_name: str | None = None  # 本人指认的人物名（单人本），用于复盘判定对错
 
 
 class CharacterBriefOut(BaseModel):

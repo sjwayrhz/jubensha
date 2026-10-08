@@ -74,7 +74,9 @@ class RoomClue(Base):
 
 
 class Vote(Base):
-    """投票：一房一人一票（uq_room_voter 约束）。voter/target 均为 users.id。"""
+    """投票：一房一人一票（uq_room_voter 约束）。
+    target_player_id（投玩家，users.id）与 target_character_id（指认人物，script_characters.id）二选一；
+    后者用于单人本"指认真凶"。"""
 
     __tablename__ = "votes"
     __table_args__ = (UniqueConstraint("room_id", "voter_id", name="uq_room_voter"),)
@@ -82,5 +84,8 @@ class Vote(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     room_id: Mapped[int] = mapped_column(ForeignKey("rooms.id", ondelete="CASCADE"), index=True)
     voter_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    target_player_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    target_player_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    target_character_id: Mapped[int | None] = mapped_column(
+        ForeignKey("script_characters.id", ondelete="CASCADE"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -303,6 +303,9 @@ input[type=file] { color: var(--muted); font-size: 14px; }
 @keyframes stamp { from { transform: rotate(-6deg) scale(1.6); opacity: 0; } to { transform: rotate(-6deg) scale(1); opacity: 1; } }
 .rev-p { font-size: 14px; color: #b8ab90; line-height: 2; max-width: 320px; margin: 0 auto; font-family: var(--serif); }
 .rev-p b { color: var(--gold); }
+.accuse-verdict { margin: 10px auto 0; font-size: 14px; letter-spacing: 1px; font-family: var(--serif); }
+.accuse-verdict.right { color: var(--gold); }
+.accuse-verdict.wrong { color: #8a7f68; }
 
 /* ---------- DM / 管理后台 ---------- */
 .ctl-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }

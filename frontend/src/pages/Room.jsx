@@ -50,6 +50,8 @@ export default function Room() {
   const [chatInput, setChatInput] = useState('');
   const [recording, setRecording] = useState(false);
   const [votedFor, setVotedFor] = useState(null);
+  const [characters, setCharacters] = useState([]);
+  const [accusedId, setAccusedId] = useState(null);
   const recRef = useRef(null);
   const [playingId, setPlayingId] = useState(null);
   const audioRef = useRef(null);
@@ -80,6 +82,9 @@ export default function Room() {
       }
       if (['reveal', 'ended'].includes(r.stage)) {
         api(`/rooms/${id}/result`).then(setResult).catch(() => {});
+      }
+      if (r.stage === 'voting') {
+        api(`/rooms/${id}/characters`).then(setCharacters).catch(() => {});
       }
     } catch {
       /* 忽略分支加载失败 */
@@ -184,6 +189,15 @@ export default function Room() {
     try {
       await api(`/rooms/${id}/vote`, { method: 'POST', body: { target_player_id: targetId } });
       setVotedFor(targetId);
+    } catch (ex) {
+      setErr(ex.message);
+    }
+  };
+
+  const accuse = async (characterId) => {
+    try {
+      await api(`/rooms/${id}/vote`, { method: 'POST', body: { target_character_id: characterId } });
+      setAccusedId(characterId);
     } catch (ex) {
       setErr(ex.message);
     }
@@ -315,9 +329,25 @@ export default function Room() {
           <div className="vote-title">投出你心中的<span>真凶</span></div>
           <div className="vote-sub">一人一票 · 不可更改</div>
           {others.length === 0 ? (
-            <p className="muted" style={{ textAlign: 'center', padding: '12px 0' }}>
-              单人剧本无需投票，等待 DM 推进到真相复盘…
-            </p>
+            <>
+              <div className="vote-sub" style={{ marginBottom: 8 }}>指认你心中的真凶 · 一人一次 · 不可更改</div>
+              {characters.map((c) => {
+                const isMine = accusedId === c.id;
+                const label = (c.name || '?').slice(0, 1);
+                return (
+                  <div className={`sus${isMine ? ' mine' : ''}`} key={c.id}>
+                    <div className="av">{label}</div>
+                    <div className="nm">
+                      <b>{c.name}</b>
+                      <span>{c.description ? c.description.slice(0, 24) : ''}</span>
+                    </div>
+                    {isMine
+                      ? <span className="voted-tag">已指认</span>
+                      : <button className="vt" onClick={() => accuse(c.id)}>指认</button>}
+                  </div>
+                );
+              })}
+            </>
           ) : others.map((p) => {
             const n = (counts && counts.counts && counts.counts[String(p.user_id)]) || 0;
             const isMine = votedFor === p.user_id;
@@ -348,6 +378,11 @@ export default function Room() {
             <div className="rev-k">真 相 揭 晓</div>
             <div className="rev-t">真凶是</div>
             <div className="seal"><span>{result.murderer_name}</span></div>
+            {result.my_accused_name && (
+              <div className={`accuse-verdict${result.my_accused_name === result.murderer_name ? ' right' : ' wrong'}`}>
+                你指认了{result.my_accused_name} · {result.my_accused_name === result.murderer_name ? '指认正确' : '指认错误'}
+              </div>
+            )}
             {result.murderer_description && <p className="rev-p">{result.murderer_description}</p>}
             {result.recap && <p className="rev-p" style={{ marginTop: 12 }}><b>复盘</b> · {result.recap}</p>}
           </div>
