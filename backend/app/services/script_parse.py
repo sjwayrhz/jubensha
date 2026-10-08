@@ -81,13 +81,46 @@ class PaddleOCRBackend:
         return "\n".join(t for t in texts if t).strip()
 
 
+class RapidOCRBackend:
+    """默认 OCR 实现：RapidOCR（ONNX Runtime），中文识别。
+
+    比 PaddleOCR 轻得多（无需 paddlepaddle，纯 pip 安装），
+    Python 3.14 等新版本也能装。首次运行会自动下载模型（需代理）。
+    """
+
+    def __init__(self) -> None:
+        try:
+            from rapidocr_onnxruntime import RapidOCR
+        except ImportError as e:
+            raise RuntimeError(
+                "未安装 rapidocr_onnxruntime，请 pip install rapidocr_onnxruntime"
+            ) from e
+        log.info("初始化 RapidOCR（首次运行会下载模型，请耐心等待）…")
+        self._engine = RapidOCR()
+
+    def ocr_image(self, image_bytes: bytes) -> str:
+        import numpy as np
+        from PIL import Image
+
+        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        result, _ = self._engine(np.array(img))
+        texts = []
+        for line in result or []:
+            # line: [bbox, text, confidence]
+            try:
+                texts.append(line[1])
+            except (IndexError, TypeError):
+                continue
+        return "\n".join(t for t in texts if t).strip()
+
+
 def ocr_pdf(pdf_path: str, backend: OCRBackend | None = None) -> str:
     """把 PDF 每页渲染成图片，逐页 OCR 后拼接。"""
     try:
         import fitz
     except ImportError as e:
         raise RuntimeError("未安装 PyMuPDF，请 pip install PyMuPDF") from e
-    backend = backend or PaddleOCRBackend()
+    backend = backend or RapidOCRBackend()
     parts: list[str] = []
     doc = fitz.open(pdf_path)
     with doc:

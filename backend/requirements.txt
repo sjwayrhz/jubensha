@@ -8,5 +8,5 @@ pyjwt>=2.8
 python-multipart>=0.0.9
 email-validator>=2.0
 PyMuPDF>=1.24
-paddleocr>=2.7
-paddlepaddle>=2.6
+# paddleocr/paddlepaddle 无 Python 3.14 的 wheel，改用 RapidOCR（ONNX，同样中文识别）
+rapidocr_onnxruntime>=1.4
