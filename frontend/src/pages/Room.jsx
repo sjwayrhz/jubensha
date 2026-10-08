@@ -314,7 +314,11 @@ export default function Room() {
         <div className="card vote-sec">
           <div className="vote-title">投出你心中的<span>真凶</span></div>
           <div className="vote-sub">一人一票 · 不可更改</div>
-          {others.map((p) => {
+          {others.length === 0 ? (
+            <p className="muted" style={{ textAlign: 'center', padding: '12px 0' }}>
+              单人剧本无需投票，等待 DM 推进到真相复盘…
+            </p>
+          ) : others.map((p) => {
             const n = (counts && counts.counts && counts.counts[String(p.user_id)]) || 0;
             const isMine = votedFor === p.user_id;
             const label = (p.character_name || p.nickname || `玩家${p.user_id}`).slice(0, 1);
