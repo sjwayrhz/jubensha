@@ -8,5 +8,6 @@ pyjwt>=2.8
 python-multipart>=0.0.9
 email-validator>=2.0
 PyMuPDF>=1.24
-# paddleocr/paddlepaddle 无 Python 3.14 的 wheel，改用 RapidOCR（ONNX，同样中文识别）
-rapidocr_onnxruntime>=1.4
+# clerk 是 Python 3.14：paddlepaddle / rapidocr 均无对应 wheel，
+# 改用 Tesseract（系统包 tesseract-ocr + tesseract-ocr-chi-sim）+ pytesseract
+pytesseract>=0.3

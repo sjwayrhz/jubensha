@@ -114,13 +114,40 @@ class RapidOCRBackend:
         return "\n".join(t for t in texts if t).strip()
 
 
+class TesseractBackend:
+    """默认 OCR 实现：Tesseract（系统二进制 + chi_sim 中文语言包）。
+
+    对 Python 版本无要求（paddlepaddle / rapidocr 均无 Python 3.14 的 wheel）。
+    需要系统安装 tesseract-ocr 及 tesseract-ocr-chi-sim。
+    """
+
+    def __init__(self, lang: str = "chi_sim") -> None:
+        try:
+            import pytesseract  # noqa: F401
+        except ImportError as e:
+            raise RuntimeError(
+                "未安装 pytesseract，请 pip install pytesseract"
+            ) from e
+        self._lang = lang
+
+    def ocr_image(self, image_bytes: bytes) -> str:
+        import pytesseract
+        from PIL import Image
+
+        img = Image.open(io.BytesIO(image_bytes))
+        try:
+            return pytesseract.image_to_string(img, lang=self._lang).strip()
+        except Exception as e:
+            raise RuntimeError(f"Tesseract 识别失败：{e}") from e
+
+
 def ocr_pdf(pdf_path: str, backend: OCRBackend | None = None) -> str:
     """把 PDF 每页渲染成图片，逐页 OCR 后拼接。"""
     try:
         import fitz
     except ImportError as e:
         raise RuntimeError("未安装 PyMuPDF，请 pip install PyMuPDF") from e
-    backend = backend or RapidOCRBackend()
+    backend = backend or TesseractBackend()
     parts: list[str] = []
     doc = fitz.open(pdf_path)
     with doc:
