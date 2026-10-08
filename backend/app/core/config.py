@@ -25,8 +25,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24 * 7
 
-    # 剧本 PDF 上传
-    upload_dir: str = "uploads"
+    # 剧本 PDF 上传：固定在项目根 script-library/uploads，与启动时的 CWD 无关
+    # （网页上传的剧本进剧本库，随仓库提交）
+    upload_dir: str = str(_PROJECT_ROOT / "script-library" / "uploads")
     max_upload_mb: int = 50
     # 文字提取少于该字数则判定为扫描版，走 OCR
     ocr_text_threshold: int = 200

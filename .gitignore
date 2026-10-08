@@ -7,4 +7,5 @@ dist/
 build/
 
 uploads/
+!script-library/uploads/
 frontend/dist/

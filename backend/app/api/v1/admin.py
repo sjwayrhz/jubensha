@@ -44,6 +44,14 @@ def list_scripts(db: Session = Depends(get_db), admin: User = Depends(require_ad
     return db.query(Script).order_by(Script.id.desc()).all()
 
 
+def _safe_filename(name: str) -> str:
+    """清洗上传文件名：去路径分隔符/控制字符，截断过长部分，防路径穿越与碰撞。"""
+    base = os.path.basename(name.replace("\\", "/"))
+    base = "".join(c for c in base if ord(c) >= 32 and c not in '/\\')
+    stem = os.path.splitext(base)[0].strip()[:100] or "script"
+    return f"{stem}_{uuid.uuid4().hex[:8]}.pdf"
+
+
 @router.post("/scripts/upload", response_model=ScriptUploadOut, status_code=201)
 async def upload_script_pdf(
     file: UploadFile,
@@ -58,7 +66,7 @@ async def upload_script_pdf(
         raise HTTPException(400, "只接受 PDF 文件")
     os.makedirs(settings.upload_dir, exist_ok=True)
     max_bytes = settings.max_upload_mb * 1024 * 1024
-    safe_name = f"{uuid.uuid4().hex}.pdf"
+    safe_name = _safe_filename(name)
     dest = os.path.join(settings.upload_dir, safe_name)
     size = 0
     with open(dest, "wb") as f:
