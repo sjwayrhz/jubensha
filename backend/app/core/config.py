@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     # 异步语音条
     voice_dir: str = "uploads/voice"
     max_voice_mb: int = 2
-    voice_allowed_ext: str = "mp3,m4a,wav,amr"
+    voice_allowed_ext: str = "mp3,m4a,wav,amr,webm"  # webm：手机浏览器 MediaRecorder 默认格式
 
     @property
     def database_url(self) -> str:

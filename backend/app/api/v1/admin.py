@@ -178,6 +178,12 @@ def structure_script_api(
     )
 
 
+@router.get("/users", response_model=list[UserOut])
+def list_users(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    """用户列表（开 DM 权限用）。"""
+    return db.query(User).order_by(User.id.desc()).limit(200).all()
+
+
 @router.put("/users/{user_id}/role", response_model=UserOut)
 def update_user_role(
     user_id: int,

@@ -146,6 +146,29 @@ def get_my_clues(
     ]
 
 
+@router.get("/{room_id}/result", response_model=FinishOut)
+def get_result(
+    room_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+):
+    """公布真相后，房间成员查看真凶与复盘。"""
+    room = _get_room_or_404(db, room_id)
+    _membership_or_403(db, room, user)
+    if room.stage not in ("reveal", "ended"):
+        raise HTTPException(400, f"当前阶段 {room.stage}，真相尚未公布")
+    murderer = (
+        db.query(ScriptCharacter)
+        .filter_by(script_id=room.script_id, is_murderer=True)
+        .first()
+    )
+    script = db.get(Script, room.script_id)
+    return FinishOut(
+        room_id=room.id, stage=room.stage,
+        murderer_name=murderer.name if murderer else None,
+        murderer_description=murderer.description if murderer else None,
+        recap=script.description if script else "",
+    )
+
+
 @router.post("/{room_id}/vote")
 def cast_vote(
     room_id: int, data: VoteIn, db: Session = Depends(get_db),

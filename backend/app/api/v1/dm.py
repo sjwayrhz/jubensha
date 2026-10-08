@@ -14,10 +14,13 @@ from ...ws.manager import manager
 from ...schemas.room import (
     AdvanceIn,
     AssignIn,
+    CharacterBriefOut,
     ClueRevealIn,
+    DmRoomOut,
     FinishOut,
     RoomCreateIn,
     RoomCreateOut,
+    ScriptClueBriefOut,
 )
 
 log = logging.getLogger("jubensha.dm")
@@ -57,6 +60,52 @@ def _transition(db: Session, room: Room, to: str) -> Room:
     db.refresh(room)
     log.info("房间切阶段：room=%d %s", room.id, to)
     return room
+
+
+@router.get("/rooms", response_model=list[DmRoomOut])
+def list_my_rooms(db: Session = Depends(get_db), dm: User = Depends(require_dm)):
+    """当前 DM 开过的房间列表。"""
+    rooms = (
+        db.query(Room).filter_by(dm_id=dm.id).order_by(Room.id.desc()).all()
+    )
+    out = []
+    for r in rooms:
+        script = db.get(Script, r.script_id)
+        n = db.query(RoomPlayer).filter_by(room_id=r.id).count()
+        out.append(DmRoomOut(
+            id=r.id, code=r.code, stage=r.stage, script_id=r.script_id,
+            script_title=script.title if script else "",
+            player_count=n,
+        ))
+    return out
+
+
+@router.get("/rooms/{room_id}/characters", response_model=list[CharacterBriefOut])
+def room_characters(room_id: int, db: Session = Depends(get_db), dm: User = Depends(require_dm)):
+    """本房剧本的角色列表（DM 分配角色用）。"""
+    room = _get_room_or_404(db, room_id)
+    _require_room_dm(room, dm)
+    chars = (
+        db.query(ScriptCharacter)
+        .filter_by(script_id=room.script_id)
+        .order_by(ScriptCharacter.sort_order, ScriptCharacter.id)
+        .all()
+    )
+    return chars
+
+
+@router.get("/rooms/{room_id}/clues", response_model=list[ScriptClueBriefOut])
+def room_script_clues(room_id: int, db: Session = Depends(get_db), dm: User = Depends(require_dm)):
+    """本房剧本的全部线索（DM 投放用）。"""
+    room = _get_room_or_404(db, room_id)
+    _require_room_dm(room, dm)
+    clues = (
+        db.query(ScriptClue)
+        .filter_by(script_id=room.script_id)
+        .order_by(ScriptClue.sort_order, ScriptClue.id)
+        .all()
+    )
+    return clues
 
 
 @router.post("/rooms", response_model=RoomCreateOut, status_code=201)

@@ -99,3 +99,31 @@ class FinishOut(BaseModel):
     murderer_name: str | None = None
     murderer_description: str | None = None
     recap: str = ""
+
+
+class CharacterBriefOut(BaseModel):
+    id: int
+    name: str
+    description: str = ""
+
+    model_config = {"from_attributes": True}
+
+
+class ScriptClueBriefOut(BaseModel):
+    id: int
+    title: str
+    content: str = ""
+    clue_type: str = "public"
+
+    model_config = {"from_attributes": True}
+
+
+class DmRoomOut(BaseModel):
+    id: int
+    code: str
+    stage: str
+    script_id: int
+    script_title: str = ""
+    player_count: int = 0
+
+    model_config = {"from_attributes": True}

@@ -28,6 +28,7 @@ _MEDIA_TYPE = {
     "m4a": "audio/mp4",
     "wav": "audio/wav",
     "amr": "audio/amr",
+    "webm": "audio/webm",
 }
 
 

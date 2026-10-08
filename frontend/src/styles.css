@@ -1,0 +1,105 @@
+/* 剧本杀前端：mobile-first 原生 CSS */
+:root {
+  --bg: #f6f4ef;
+  --card: #ffffff;
+  --ink: #2b2620;
+  --muted: #8a8177;
+  --line: #e7e1d6;
+  --brand: #7c3f21;
+  --brand-d: #5f2f18;
+  --ok: #2e7d4f;
+  --warn: #b7791f;
+  --bad: #b3402e;
+  --radius: 12px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-tap-highlight-color: transparent;
+}
+#root { min-height: 100vh; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 12px 14px 40px; }
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--card); border-bottom: 1px solid var(--line);
+}
+.topbar .in {
+  max-width: 640px; margin: 0 auto; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.brand { font-weight: 700; font-size: 17px; color: var(--brand); text-decoration: none; }
+.nav { display: flex; gap: 4px; margin-left: auto; align-items: center; }
+.nav a, .nav button.link {
+  font-size: 13px; color: var(--muted); text-decoration: none;
+  padding: 6px 8px; border: 0; background: none; cursor: pointer;
+}
+.nav a.active, .nav a.on { color: var(--brand); font-weight: 600; }
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px; margin: 10px 0;
+}
+.card h3 { margin: 0 0 8px; font-size: 16px; }
+.muted { color: var(--muted); font-size: 13px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.space { justify-content: space-between; }
+.btn {
+  display: inline-block; border: 0; border-radius: 10px;
+  background: var(--brand); color: #fff;
+  padding: 11px 18px; font-size: 15px; cursor: pointer;
+  min-height: 44px;
+}
+.btn:active { background: var(--brand-d); }
+.btn.ghost { background: #efe9dc; color: var(--ink); }
+.btn.danger { background: var(--bad); }
+.btn.small { padding: 7px 12px; font-size: 13px; min-height: 36px; }
+.btn:disabled { opacity: .5; }
+.btn.block { width: 100%; }
+input[type=text], input[type=email], input[type=password], textarea, select {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px;
+  padding: 11px 12px; font-size: 15px; background: #fff; color: var(--ink);
+}
+textarea { min-height: 90px; resize: vertical; font-family: inherit; }
+label.f { display: block; margin: 10px 0 4px; font-size: 13px; color: var(--muted); }
+.err {
+  background: #fbeeea; color: var(--bad); border: 1px solid #f0c9bd;
+  border-radius: 10px; padding: 10px 12px; margin: 10px 0; font-size: 14px;
+}
+.okmsg {
+  background: #e9f5ee; color: var(--ok); border: 1px solid #bfe3cd;
+  border-radius: 10px; padding: 10px 12px; margin: 10px 0; font-size: 14px;
+}
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.list li:last-child { border-bottom: 0; }
+.badge {
+  display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 20px;
+  background: #efe9dc; color: var(--ink); margin-right: 6px;
+}
+.badge.stage { background: #e4ecf7; color: #2c5282; }
+.badge.ok { background: #e9f5ee; color: var(--ok); }
+.badge.warn { background: #fbf3df; color: var(--warn); }
+.stagebar {
+  display: flex; gap: 4px; overflow-x: auto; padding: 6px 0; margin-bottom: 6px;
+  font-size: 12px; color: var(--muted);
+}
+.stagebar span { white-space: nowrap; padding: 3px 8px; border-radius: 12px; background: #efe9dc; }
+.stagebar span.cur { background: var(--brand); color: #fff; font-weight: 600; }
+.stagebar span.done { background: #e9f5ee; color: var(--ok); }
+.msg { padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.msg .who { font-size: 12px; color: var(--muted); }
+.voice { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.voice audio { flex: 1; min-width: 0; height: 36px; }
+.rec { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+.rec .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bad); animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: .2; } }
+.script-body { white-space: pre-wrap; font-size: 15px; }
+.kv { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+.kv b { font-weight: 600; }
+.center { text-align: center; }
+.mt { margin-top: 12px; }
+pre.debug { font-size: 11px; background: #f0ece4; padding: 8px; border-radius: 8px; overflow-x: auto; }
