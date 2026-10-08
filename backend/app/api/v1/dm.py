@@ -56,6 +56,8 @@ def _transition(db: Session, room: Room, to: str) -> Room:
             400, f"非法流转：{room.stage} → {to}（允许：{allowed or '无'}）"
         )
     room.stage = to
+    # 切阶段时清空举手状态
+    db.query(RoomPlayer).filter_by(room_id=room.id).update({"is_ready": False})
     db.commit()
     db.refresh(room)
     log.info("房间切阶段：room=%d %s", room.id, to)
@@ -186,6 +188,17 @@ def advance_stage(
         if len(allowed) != 1:
             raise HTTPException(400, f"当前阶段 {room.stage} 需要明确指定 to")
         to = allowed[0]
+    if room.stage == "selecting" and to == "reading":
+        unassigned = (
+            db.query(RoomPlayer)
+            .filter_by(room_id=room.id)
+            .filter(RoomPlayer.character_id.is_(None))
+            .count()
+        )
+        if unassigned:
+            raise HTTPException(
+                400, f"还有 {unassigned} 名玩家未选角，请先完成选角再进入读本"
+            )
     room = _transition(db, room, to)
     manager.broadcast_sync(room.id, "stage_changed", {"stage": room.stage})
     return {"room_id": room.id, "stage": room.stage}

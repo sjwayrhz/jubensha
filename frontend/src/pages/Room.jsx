@@ -83,7 +83,7 @@ export default function Room() {
       if (['reveal', 'ended'].includes(r.stage)) {
         api(`/rooms/${id}/result`).then(setResult).catch(() => {});
       }
-      if (r.stage === 'voting') {
+      if (r.stage === 'voting' || r.stage === 'selecting') {
         api(`/rooms/${id}/characters`).then(setCharacters).catch(() => {});
       }
     } catch {
@@ -98,7 +98,8 @@ export default function Room() {
   // WS 事件 → 刷新
   const onEvent = useCallback((ev) => {
     if (String(ev.room_id) !== String(id)) return;
-    if (ev.type === 'stage_changed' || ev.type === 'player_joined' || ev.type === 'room_ended') {
+    if (ev.type === 'stage_changed' || ev.type === 'player_joined' || ev.type === 'room_ended'
+        || ev.type === 'character_selected' || ev.type === 'hand_update') {
       loadRoom().then(loadStage);
     } else if (ev.type === 'clue_revealed') {
       api(`/rooms/${id}/clues`).then(setClues).catch(() => {});
@@ -203,6 +204,22 @@ export default function Room() {
     }
   };
 
+  const selectCharacter = async (characterId) => {
+    try {
+      await api(`/rooms/${id}/select-character`, { method: 'POST', body: { character_id: characterId } });
+    } catch (ex) {
+      setErr(ex.message);
+    }
+  };
+
+  const toggleHand = async (raised) => {
+    try {
+      await api(`/rooms/${id}/hand`, { method: 'POST', body: { raised } });
+    } catch (ex) {
+      setErr(ex.message);
+    }
+  };
+
   if (err && !room) return <div className="wrap"><div className="err">{err}</div></div>;
   if (!room) return <div className="wrap"><p className="muted">正在入场…</p></div>;
 
@@ -239,8 +256,33 @@ export default function Room() {
             ))}
           </ul>
           <p className="muted">
-            {room.stage === 'waiting' ? '好戏开场前，稍候 DM 入场…' : 'DM 正在分发角色…'}
+            {room.stage === 'waiting' ? '好戏开场前，稍候 DM 入场…' : '选择你的角色，DM 确认后进入读本…'}
           </p>
+        </div>
+      )}
+
+      {room.stage === 'selecting' && (
+        <div className="card">
+          <h3>选角</h3>
+          <p className="muted">看看人物介绍，选一个你想演的（可改选）。</p>
+          {characters.map((c) => {
+            const mine = me && me.character_id === c.id;
+            const takenByOther = room.players.some((p) => p.user_id !== user.id && p.character_id === c.id);
+            return (
+              <div className={`sus${mine ? ' mine' : ''}`} key={c.id}>
+                <div className="av">{(c.name || '?').slice(0, 1)}</div>
+                <div className="nm">
+                  <b>{c.name}</b>
+                  <span>{c.description || '暂无介绍'}</span>
+                </div>
+                {mine
+                  ? <span className="voted-tag">已选</span>
+                  : takenByOther
+                    ? <span className="muted">已被选</span>
+                    : <button className="vt" onClick={() => selectCharacter(c.id)}>选角</button>}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -248,7 +290,19 @@ export default function Room() {
       <div className="room-main">
       {room.stage === 'reading' && (
         myScript ? (
-          <ReadPaper characterName={myScript.character_name} text={myScript.description} />
+          <>
+            <ReadPaper characterName={myScript.character_name} text={myScript.description} />
+            <div className="card" style={{ textAlign: 'center' }}>
+              {me && me.is_ready ? (
+                <>
+                  <p className="muted">你已举手，表示读完了，等 DM 推进…</p>
+                  <button className="btn ghost small" onClick={() => toggleHand(false)}>放下</button>
+                </>
+              ) : (
+                <button className="btn block" onClick={() => toggleHand(true)}>举手 · 我读完了</button>
+              )}
+            </div>
+          </>
         ) : (
           <div className="card"><p className="muted">DM 尚未给你分配角色，稍等…</p></div>
         )
@@ -278,7 +332,16 @@ export default function Room() {
       {['discussing', 'voting', 'reveal', 'ended'].includes(room.stage) && (
         <>
           <div className="card">
-            <h3>深夜密谈</h3>
+            <div className="row space">
+              <h3 style={{ margin: 0 }}>深夜密谈</h3>
+              {room.stage === 'discussing' && (
+                me && me.is_ready ? (
+                  <button className="btn ghost small" onClick={() => toggleHand(false)}>已举手 · 放下</button>
+                ) : (
+                  <button className="btn small" onClick={() => toggleHand(true)}>举手</button>
+                )
+              )}
+            </div>
             <div className="chatbox">
               {chat.length === 0 ? <p className="muted">还没有人开口，第一个打破沉默吧。</p> : chat.map((m) => (
                 <div className="msg" key={m.id}>

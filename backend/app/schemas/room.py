@@ -50,6 +50,14 @@ class VoteIn(BaseModel):
     target_character_id: int | None = None  # 指认的人物 id（单人本指认真凶），与 target_player_id 二选一
 
 
+class SelectCharacterIn(BaseModel):
+    character_id: int  # 玩家自选角色
+
+
+class HandIn(BaseModel):
+    raised: bool  # 举手 / 放下
+
+
 class RoleUpdateIn(BaseModel):
     role: str  # admin | dm | player
 

@@ -15,11 +15,13 @@ from ...schemas.room import (
     CharacterBriefOut,
     ClueOut,
     FinishOut,
+    HandIn,
     MyScriptOut,
     RoomDetailOut,
     RoomMemberOut,
     RoomOut,
     ScriptBriefOut,
+    SelectCharacterIn,
     VoteIn,
 )
 
@@ -195,6 +197,62 @@ def get_result(
         recap=script.description if script else "",
         my_accused_name=my_accused_name,
     )
+
+
+@router.post("/{room_id}/select-character")
+def select_character(
+    room_id: int, data: SelectCharacterIn, db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """选角阶段玩家自选角色：只能在 selecting 阶段；角色不能被别人已选；可改选。"""
+    room = _get_room_or_404(db, room_id)
+    member = db.query(RoomPlayer).filter_by(room_id=room.id, user_id=user.id).first()
+    if not member:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "你不在这个房间")
+    if room.stage != "selecting":
+        raise HTTPException(400, f"当前阶段 {room.stage}，不能选角")
+    char = db.get(ScriptCharacter, data.character_id)
+    if not char or char.script_id != room.script_id:
+        raise HTTPException(400, "角色不属于本房剧本")
+    taken = (
+        db.query(RoomPlayer)
+        .filter(
+            RoomPlayer.room_id == room.id,
+            RoomPlayer.character_id == char.id,
+            RoomPlayer.user_id != user.id,
+        )
+        .first()
+    )
+    if taken:
+        raise HTTPException(400, "该角色已被其他玩家选择")
+    member.character_id = char.id
+    db.commit()
+    log.info("选角：room=%d user=%d char=%s", room.id, user.id, char.name)
+    manager.broadcast_sync(room.id, "character_selected", {
+        "user_id": user.id, "character_id": char.id, "character_name": char.name,
+    })
+    return {"room_id": room.id, "user_id": user.id,
+            "character_id": char.id, "character_name": char.name}
+
+
+@router.post("/{room_id}/hand")
+def raise_hand(
+    room_id: int, data: HandIn, db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """读本/讨论阶段玩家举手（表示已读完/发言完毕），可放下。"""
+    room = _get_room_or_404(db, room_id)
+    member = db.query(RoomPlayer).filter_by(room_id=room.id, user_id=user.id).first()
+    if not member:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "你不在这个房间")
+    if room.stage not in ("reading", "discussing"):
+        raise HTTPException(400, f"当前阶段 {room.stage}，不能举手")
+    member.is_ready = data.raised
+    db.commit()
+    manager.broadcast_sync(room.id, "hand_update", {
+        "user_id": user.id, "hand_raised": data.raised,
+    })
+    return {"room_id": room.id, "user_id": user.id, "hand_raised": data.raised}
 
 
 @router.post("/{room_id}/vote")

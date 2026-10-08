@@ -95,6 +95,8 @@ export default function DmRoom() {
           {room.players.map((p) => (
             <li key={p.user_id}>{p.nickname || `玩家${p.user_id}`}
               {p.character_name && <span className="badge">{p.character_name}</span>}
+              {!p.character_name && <span className="badge warn">未选角</span>}
+              {['reading', 'discussing'].includes(room.stage) && p.is_ready && <span className="badge ok">已举手</span>}
             </li>
           ))}
         </ul>
