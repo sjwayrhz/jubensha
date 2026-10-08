@@ -2,6 +2,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ...core.deps import get_current_user
@@ -9,6 +10,7 @@ from ...db.session import get_db
 from ...models.room import Room, RoomClue, RoomPlayer, Vote
 from ...models.script import Script, ScriptCharacter, ScriptClue
 from ...models.user import User
+from ...ws.manager import manager
 from ...schemas.room import (
     ClueOut,
     MyScriptOut,
@@ -84,6 +86,10 @@ def join_room(code: str, db: Session = Depends(get_db), user: User = Depends(get
         db.add(member)
         db.commit()
         log.info("加入房间：room=%d user=%d", room.id, user.id)
+        manager.broadcast_sync(room.id, "player_joined", {
+            "user_id": user.id,
+            "nickname": user.nickname or "",
+        })
     return RoomOut.model_validate(room)
 
 
@@ -169,4 +175,17 @@ def cast_vote(
     db.add(Vote(room_id=room.id, voter_id=user.id, target_player_id=data.target_player_id))
     db.commit()
     log.info("投票：room=%d voter=%d target=%d", room.id, user.id, data.target_player_id)
+    manager.broadcast_sync(room.id, "vote_update", _vote_counts(db, room.id))
     return {"room_id": room.id, "voter_id": user.id, "target_player_id": data.target_player_id}
+
+
+def _vote_counts(db: Session, room_id: int) -> dict:
+    """投票计数（开票前只给计数，不透露谁投谁）。"""
+    rows = (
+        db.query(Vote.target_player_id, func.count(Vote.id))
+        .filter(Vote.room_id == room_id)
+        .group_by(Vote.target_player_id)
+        .all()
+    )
+    counts = {str(target): n for target, n in rows}
+    return {"counts": counts, "total": sum(counts.values())}

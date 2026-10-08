@@ -10,6 +10,7 @@ from ...db.session import get_db
 from ...models.room import TRANSITIONS, Room, RoomClue, RoomPlayer
 from ...models.script import Script, ScriptCharacter, ScriptClue
 from ...models.user import User
+from ...ws.manager import manager
 from ...schemas.room import (
     AdvanceIn,
     AssignIn,
@@ -82,6 +83,7 @@ def start_room(room_id: int, db: Session = Depends(get_db), dm: User = Depends(r
     if room.stage != "waiting":
         raise HTTPException(400, f"当前阶段 {room.stage}，不能开局")
     room = _transition(db, room, "selecting")
+    manager.broadcast_sync(room.id, "stage_changed", {"stage": room.stage})
     return {"room_id": room.id, "stage": room.stage}
 
 
@@ -136,6 +138,7 @@ def advance_stage(
             raise HTTPException(400, f"当前阶段 {room.stage} 需要明确指定 to")
         to = allowed[0]
     room = _transition(db, room, to)
+    manager.broadcast_sync(room.id, "stage_changed", {"stage": room.stage})
     return {"room_id": room.id, "stage": room.stage}
 
 
@@ -169,6 +172,18 @@ def reveal_clue(
     db.commit()
     db.refresh(rc)
     log.info("投放线索：room=%d clue=%d scope=%s", room.id, clue.id, data.scope)
+    clue_data = {
+        "room_clue_id": rc.id,
+        "clue_id": clue.id,
+        "title": clue.title,
+        "content": clue.content or "",
+        "scope": rc.visible_scope,
+    }
+    if rc.visible_scope == "public":
+        manager.broadcast_sync(room.id, "clue_revealed", clue_data)
+    else:
+        # 定向线索只推给目标玩家
+        manager.broadcast_sync(room.id, "clue_revealed", clue_data, user_ids=[data.player_id])
     return {"room_clue_id": rc.id, "scope": rc.visible_scope}
 
 
@@ -180,6 +195,7 @@ def open_vote(room_id: int, db: Session = Depends(get_db), dm: User = Depends(re
     if room.stage == "voting":
         return {"room_id": room.id, "stage": room.stage}
     room = _transition(db, room, "voting")
+    manager.broadcast_sync(room.id, "vote_opened", {"stage": room.stage})
     return {"room_id": room.id, "stage": room.stage}
 
 
@@ -189,6 +205,7 @@ def close_vote(room_id: int, db: Session = Depends(get_db), dm: User = Depends(r
     room = _get_room_or_404(db, room_id)
     _require_room_dm(room, dm)
     room = _transition(db, room, "reveal")
+    manager.broadcast_sync(room.id, "vote_closed", {"stage": room.stage})
     return {"room_id": room.id, "stage": room.stage}
 
 
@@ -208,6 +225,10 @@ def finish_room(room_id: int, db: Session = Depends(get_db), dm: User = Depends(
         raise HTTPException(400, "剧本未标记真凶，无法公布")
     script = db.get(Script, room.script_id)
     room = _transition(db, room, "ended")
+    manager.broadcast_sync(room.id, "room_ended", {
+        "stage": room.stage,
+        "murderer_name": murderer.name,
+    })
     return FinishOut(
         room_id=room.id, stage=room.stage,
         murderer_name=murderer.name, murderer_description=murderer.description,
