@@ -14,10 +14,9 @@ export default function DmHome() {
 
   const load = () => {
     api('/dm/rooms').then(setRooms).catch((e) => setErr(e.message));
-    api('/admin/scripts').then((ss) => {
-      const pub = ss.filter((s) => s.status === 'published');
-      setScripts(pub);
-      if (pub.length && !scriptId) setScriptId(String(pub[0].id));
+    api('/scripts').then((ss) => {
+      setScripts(ss);
+      if (ss.length && !scriptId) setScriptId(String(ss[0].id));
     }).catch(() => {});
   };
   useEffect(load, []);
