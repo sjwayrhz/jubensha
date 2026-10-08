@@ -21,6 +21,18 @@ export default function DmHome() {
   };
   useEffect(load, []);
 
+  const removeRoom = async (r) => {
+    if (!window.confirm(`确定删除房间 ${r.code}（${r.script_title}）吗？房间内的聊天、语音、投票记录会一并删除。`)) return;
+    setErr(''); setOk('');
+    try {
+      await api(`/dm/rooms/${r.id}`, { method: 'DELETE' });
+      setOk(`房间 ${r.code} 已删除`);
+      load();
+    } catch (ex) {
+      setErr(ex.message);
+    }
+  };
+
   const create = async (e) => {
     e.preventDefault();
     setErr(''); setOk('');
@@ -73,7 +85,10 @@ export default function DmHome() {
                   <span className="badge stage">{stageName[r.stage] || r.stage}</span>
                   <span className="muted">{r.player_count} 人</span>
                 </span>
-                <Link className="btn small" to={`/dm/rooms/${r.id}`}>控场</Link>
+                <span>
+                  <Link className="btn small" to={`/dm/rooms/${r.id}`}>控场</Link>
+                  <button className="btn small danger" style={{ marginLeft: 8 }} onClick={() => removeRoom(r)}>删除</button>
+                </span>
               </li>
             ))}
           </ul>

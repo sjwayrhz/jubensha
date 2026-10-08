@@ -1,10 +1,13 @@
 """DM 控场 API：建房、切阶段、分配角色、投放线索、投票开关、公布真相。"""
 import logging
+import os
 import random
+import shutil
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from ...core.config import settings
 from ...core.deps import require_dm
 from ...db.session import get_db
 from ...models.room import TRANSITIONS, Room, RoomClue, RoomPlayer
@@ -247,6 +250,21 @@ def reveal_clue(
         # 定向线索只推给目标玩家
         manager.broadcast_sync(room.id, "clue_revealed", clue_data, user_ids=[data.player_id])
     return {"room_clue_id": rc.id, "scope": rc.visible_scope}
+
+
+@router.delete("/rooms/{room_id}")
+def delete_room(room_id: int, db: Session = Depends(get_db), dm: User = Depends(require_dm)):
+    """删除房间：只能删自己的房间（admin 可删任意）。
+    级联删除成员、投票、线索、聊天、语音记录，并清理语音文件目录。"""
+    room = _get_room_or_404(db, room_id)
+    _require_room_dm(room, dm)
+    voice_room_dir = os.path.join(settings.voice_dir, str(room.id))
+    if os.path.isdir(voice_room_dir):
+        shutil.rmtree(voice_room_dir, ignore_errors=True)
+    db.delete(room)
+    db.commit()
+    log.info("删除房间：room=%d by dm=%d", room.id, dm.id)
+    return {"deleted": room.id}
 
 
 @router.post("/rooms/{room_id}/vote/open")
